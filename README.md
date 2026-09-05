@@ -15,5 +15,6 @@ Each case follows the same shape:
 | Case | Stack | Summary |
 |---|---|---|
 | [`kubernetes-node-join-failure/`](kubernetes-node-join-failure/) | Kubernetes, kubeadm, Vagrant/VirtualBox, Calico | Worker nodes failed to join a kubeadm cluster; a misleading `ping` success masked a multi-homed node advertising the wrong API server address. Diagnosed with layered network tests (`ping` → `nc` → `ss`), then fixed with an explicit `--apiserver-advertise-address`. |
+| [`no-space-left-on-device/`](no-space-left-on-device/) | Linux, ext4, `df`/`du`/`lsof` | Two "No space left on device" tickets, two different root causes: inode exhaustion (bytes free, no inode slots left) and a deleted log file still held open by a process (space not reclaimed until the descriptor closes). Diagnosed with `df -i` and `lsof +L1`. |
 
 More cases will be added as they're written up.
