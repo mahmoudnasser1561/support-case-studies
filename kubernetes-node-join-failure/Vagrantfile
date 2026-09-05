@@ -1,0 +1,46 @@
+Vagrant.configure("2") do |config|
+  
+# Ubuntu 24.04 LTS
+  config.vm.box = "bento/ubuntu-24.04"
+  config.vm.box_check_update = true
+
+  config.vm.boot_timeout = 600
+  config.ssh.keep_alive = true
+  
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  network_prefix = "192.168.56"
+
+  nodes = [
+    { name: "k8s-control", ip: "#{network_prefix}.10", cpus: 2, memory: 2048 },
+    { name: "k8s-worker-1", ip: "#{network_prefix}.11", cpus: 2, memory: 2048 },
+    { name: "k8s-worker-2", ip: "#{network_prefix}.12", cpus: 2, memory: 2048 },
+    { name: "k8s-worker-3", ip: "#{network_prefix}.13", cpus: 2, memory: 2048 }
+ ]
+
+  nodes.each do |node|
+    config.vm.define node[:name] do |n|
+      n.vm.hostname = node[:name]
+      n.vm.network "private_network", ip: node[:ip]
+
+      n.vm.provision "shell", inline: <<-SHELL
+        set -eux
+        cat >/etc/hosts <<'EOF'
+127.0.0.1 localhost
+#{network_prefix}.10 k8s-control
+#{network_prefix}.11 k8s-worker-1
+#{network_prefix}.12 k8s-worker-2
+#{network_prefix}.13 k8s-worker-3
+OF
+      SHELL
+
+      n.vm.provider "virtualbox" do |vb|
+        vb.name = node[:name]
+        vb.cpus = node[:cpus]
+        vb.memory = node[:memory]    
+        vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
+        vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      end
+    end
+  end
+end
